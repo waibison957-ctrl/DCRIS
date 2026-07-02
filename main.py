@@ -1,14 +1,12 @@
 import discord
 import asyncio
 import os
-import random
 
-
-WHITELIST_IDS = [123456789012345678, 876543210987654321]
+# Lista de IDs de Discord de las personas autorizadas (Whitelist)
+WHITELIST_IDS = [123456789012345678, 876543210987654321] # Reemplaza con tus IDs reales
 
 # Cargar variables críticas del entorno
 CONTROL_BOT_TOKEN = os.getenv('CONTROL_BOT_TOKEN')
-# Los tokens de las cuentas se configuran en Railway separados por comas
 SELF_BOT_TOKENS_RAW = os.getenv('SELF_BOT_TOKENS', '')
 
 # Procesar los tokens de las cuentas
@@ -25,7 +23,9 @@ if not SELF_BOT_TOKENS:
 
 class MySelfbot(discord.Client):
     def __init__(self, token, *args, **kwargs):
-        super().__init__(*args, **kwargs, self_bot=True)
+        # CORREGIDO: Definimos intents por defecto para evitar el TypeError
+        self_intents = discord.Intents.default()
+        super().__init__(*args, **kwargs, intents=self_intents, self_bot=True)
         self.my_token = token
         self.current_vc = None
 
@@ -58,12 +58,11 @@ class MySelfbot(discord.Client):
 clones = []
 
 # Inicializar el Bot Controlador Oficial
-intents = discord.Intents.default()
-intents.message_content = True  # Requerido para leer los comandos de texto
-control_bot = discord.Client(intents=intents)
+control_intents = discord.Intents.default()
+control_intents.message_content = True  # Requerido para leer los comandos de texto
+control_bot = discord.Client(intents=control_intents)
 
 
-# Función auxiliar para validar la whitelist
 def is_authorized(user_id):
     return user_id in WHITELIST_IDS
 
@@ -76,7 +75,6 @@ async def on_ready():
 
 @control_bot.event
 async def on_message(message):
-    # Ignorar mensajes del propio bot o si el autor no está en la whitelist
     if message.author == control_bot.user or not is_authorized(message.author.id):
         return
 
@@ -87,8 +85,6 @@ async def on_message(message):
     action = command[0].lower()
 
     # Comando 1: !conectar <ID_CANAL> <CANTIDAD> [unmute]
-    # Ejemplo: !conectar 112233445566 4
-    # Ejemplo con desmuteo: !conectar 112233445566 4 unmute
     if action == "!conectar":
         if len(command) < 3:
             await message.reply("Uso: `!conectar <ID_canal_voz> <cantidad_cuentas> [unmute]`")
@@ -101,12 +97,10 @@ async def on_message(message):
             await message.reply("El ID del canal y la cantidad deben ser números.")
             return
 
-        # Verificar si se solicitó desmutear/desensordecer
         unmute_mode = False
         if len(command) >= 4 and command[3].lower() == "unmute":
             unmute_mode = True
 
-        # Filtrar cuentas que no estén en un canal activo
         clones_libres = [c for c in clones if not (c.current_vc and c.current_vc.is_connected())]
         
         if not clones_libres:
@@ -121,7 +115,6 @@ async def on_message(message):
 
         exitos = 0
         for bot in grupo:
-            # Si unmute_mode es True -> self_mute=False, self_deaf=False
             success = await bot.connect_to_voice(channel_id, mute=not unmute_mode, deaf=not unmute_mode)
             if success:
                 exitos += 1
@@ -152,7 +145,7 @@ async def on_message(message):
                 )
             except Exception as e:
                 print(f"Error cambiando nombre a {bot.user}: {e}")
-            await asyncio.sleep(2.0)  # Delay preventivo contra rate limits
+            await asyncio.sleep(2.0)
         await message.reply("Cambio de nombre finalizado.")
 
     # Comando 4: !quitarfoto
@@ -177,10 +170,8 @@ async def main():
     global clones
     print("[i] Inicializando instancias de cuentas clonadas...")
     
-    # Crear los objetos de los selfbots
     clones = [MySelfbot(token=t) for t in SELF_BOT_TOKENS]
     
-    # Crear el listado de tareas asíncronas para iniciar todo junto
     tasks = [asyncio.create_task(bot.start(bot.my_token)) for bot in clones]
     tasks.append(asyncio.create_task(control_bot.start(CONTROL_BOT_TOKEN)))
     
