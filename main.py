@@ -3,7 +3,7 @@ import asyncio
 import os
 
 # Lista de IDs de Discord de las personas autorizadas (Whitelist)
-WHITELIST_IDS = [123456789012345678, 876543210987654321] # Reemplaza con tus IDs reales
+WHITELIST_IDS = [786993411605135411, 1164635211833823242] # Reemplaza con tus IDs reales
 
 # Cargar variables críticas del entorno
 CONTROL_BOT_TOKEN = os.getenv('CONTROL_BOT_TOKEN')
