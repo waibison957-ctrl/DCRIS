@@ -3,8 +3,7 @@ import asyncio
 import os
 import random
 
-# Lista de IDs de Discord de las personas autorizadas (Whitelist)
-# Reemplaza estos números con tu ID de usuario de Discord y los de tus administradores
+
 WHITELIST_IDS = [123456789012345678, 876543210987654321]
 
 # Cargar variables críticas del entorno
