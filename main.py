@@ -77,9 +77,10 @@ class MySelfbot(discord.Client):
 clones = []
 
 # =====================================================================
-# CONFIGURACIÓN DEL BOT CONTROLADOR PRINCIPAL (CORREGIDO PARA v1.7.3)
+# CONFIGURACIÓN DEL BOT CONTROLADOR PRINCIPAL (MÉTODO COMPATIBLE v1.7.3)
 # =====================================================================
-control_intents = discord.Intents.all()  # Activa todos los intents disponibles en la versión antigua
+control_intents = discord.Intents.default()
+control_intents.messages = True  # En v1.7.3 habilita explícitamente la lectura de eventos de chat[cite: 2]
 control_bot = discord.Client(intents=control_intents)
 
 def is_authorized(user_id):
